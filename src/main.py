@@ -1,15 +1,16 @@
 import os
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 from crewai import Crew, Process
 from src.agents.agent_manager import AgentManager
 
-# Carrega variáveis de ambiente do .env
-load_dotenv()
+# Carrega variáveis de ambiente do .env (busca de forma resiliente pela raiz do projeto)
+load_dotenv(find_dotenv(usecwd=True))
 
-# Certifique-se de que a chave da API da OpenAI está configurada no seu ambiente
-# Ex: OPENAI_API_KEY=sk-...
-if not os.getenv("OPENAI_API_KEY"):
-    raise ValueError("A variável de ambiente OPENAI_API_KEY não foi definida.")
+# Provider condicional: OpenAI (padrão) ou Ollama
+provider = os.getenv("LLM_PROVIDER", "openai").lower()
+# Só exige OPENAI_API_KEY quando o provider for OpenAI
+if provider != "ollama" and not os.getenv("OPENAI_API_KEY"):
+    raise ValueError("A variável de ambiente OPENAI_API_KEY não foi definida e o provider atual não é 'ollama'.")
 
 def is_safe_to_respond(question: str) -> bool:
     """Verifica se a pergunta é segura para responder."""
@@ -80,8 +81,17 @@ def main():
     if not is_safe_to_respond(user_question):
         return
 
-    # Passando a pergunta para a primeira tarefa
-    tasks[0].description = f'A pergunta do usuário é: "{user_question}". Busque no RAG por interações passadas que sejam relevantes para essa pergunta.'
+    # Passando a pergunta para a primeira tarefa, incluindo contexto do RAG quando disponível
+    try:
+        similar = manager.rag_service.search_similar_interactions(user_question, n_results=3)
+    except Exception:
+        similar = []
+    rag_snippets = "\n- " + "\n- ".join(similar) if similar else "\n- (nenhum contexto relevante)"
+    tasks[0].description = (
+        f'A pergunta do usuário é: "{user_question}". '\
+        f'Busque no RAG por interações passadas que sejam relevantes para essa pergunta.'
+        f"\nContexto do RAG (se houver):{rag_snippets}"
+    )
 
     result = crew.kickoff()
 
@@ -90,4 +100,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

@@ -16,12 +16,15 @@ def rag_service_fixture():
     # Monkeypatch o caminho do DB no RAGService para usar o diretório de teste
     original_path = RAGService.__init__
     def patched_init(self):
+        # Se não houver sentence_transformers instalado, pula o teste
+        pytest.importorskip('sentence_transformers')
         self.client = pytest.importorskip('chromadb').PersistentClient(path=str(test_db_path))
-        self.embedding_function = pytest.importorskip('langchain_community.embeddings').SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
-        self.collection = self.client.get_or_create_collection(
-            name="test_interactions",
-            embedding_function=self.embedding_function
-        )
+        from langchain_community.embeddings import SentenceTransformerEmbeddings
+        self.embedding_function = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
+        # Para manter compatibilidade com Chroma 1.x, evitamos passar embedding_function na coleção
+        # e sinalizamos para o serviço calcular embeddings no cliente.
+        self._supports_collection_embedding = False
+        self.collection = self.client.get_or_create_collection(name="test_interactions")
     
     RAGService.__init__ = patched_init
     service = RAGService()

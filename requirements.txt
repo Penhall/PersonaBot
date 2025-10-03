@@ -4,5 +4,8 @@ chromadb
 langchain-openai
 tweepy
 langchain-community
+langchain-huggingface
+sentence-transformers
 pytest
 pytest-mock
+fastapi

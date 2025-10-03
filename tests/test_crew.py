@@ -6,6 +6,8 @@ from src.agents.agent_manager import AgentManager
 @pytest.fixture
 def mocked_agent_manager(mocker):
     """Fixture que substitui (mocks) as dependências externas do AgentManager."""
+    # Desativa ferramentas no Agent durante testes para evitar validações de Tool
+    mocker.patch.dict('os.environ', {'USE_RAG_TOOL': 'false'})
     # Mock do RAGService para não interagir com o DB real
     mocker.patch('src.agents.agent_manager.RAGService', return_value=MagicMock())
     
@@ -52,4 +54,5 @@ def test_crew_kickoff(mocked_agent_manager: AgentManager):
     final_result = crew.kickoff()
 
     # Verificar se o resultado final é o esperado do último agente mockado
-    assert final_result == "Claro, testes são essenciais para a qualidade do software."
+    final_text = getattr(final_result, "raw", final_result)
+    assert final_text == "Claro, testes são essenciais para a qualidade do software."

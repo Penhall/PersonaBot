@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PersonaBot — Console</title>
+    <style>
+      :root {
+        --bg: #0b0f17;
+        --panel: rgba(20, 30, 48, 0.6);
+        --stroke: rgba(0, 255, 234, 0.25);
+        --glow: #00ffe0;
+        --glow-2: #b948ff;
+        --text: #e6edf7;
+        --muted: #8fa1b3;
+        --accent: #00ffe0;
+      }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        background: radial-gradient(1200px 600px at 80% 10%, rgba(185, 72, 255, 0.12), transparent 60%),
+                    radial-gradient(1000px 600px at 20% 90%, rgba(0, 255, 224, 0.12), transparent 60%),
+                    var(--bg);
+        color: var(--text);
+        font: 15px/1.5 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 360px 1fr;
+        gap: 16px;
+        padding: 20px;
+      }
+      .panel {
+        background: var(--panel);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--stroke);
+        border-radius: 12px;
+        padding: 16px;
+        box-shadow: 0 0 0 1px rgba(0,255,224,0.08) inset, 0 10px 30px rgba(0,0,0,0.4);
+      }
+      h1, h2 { margin: 0 0 10px; font-weight: 600; }
+      h1 { font-size: 18px; letter-spacing: 0.5px; }
+      h2 { font-size: 15px; color: var(--muted); }
+      label { display: block; margin: 10px 0 6px; color: var(--muted); }
+      input, textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: rgba(8, 12, 20, 0.6);
+        color: var(--text);
+        outline: none;
+        transition: border 0.2s, box-shadow 0.2s;
+      }
+      input:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,255,224,0.12); }
+      textarea { min-height: 100px; resize: vertical; }
+      .row { display: grid; gap: 12px; grid-template-columns: 1fr 1fr; }
+      .btn {
+        align-items: center;
+        background: linear-gradient(135deg, rgba(0,255,224,0.2), rgba(185,72,255,0.15));
+        border: 1px solid var(--stroke);
+        border-radius: 10px;
+        color: var(--text);
+        cursor: pointer;
+        display: inline-flex;
+        gap: 8px;
+        justify-content: center;
+        padding: 10px 14px;
+        transition: transform 0.08s ease, box-shadow 0.2s;
+      }
+      .btn:hover { box-shadow: 0 6px 22px rgba(0,255,224,0.15), 0 0 0 1px rgba(185,72,255,0.15) inset; }
+      .btn:active { transform: translateY(1px); }
+      .badge { padding: 2px 8px; border: 1px solid var(--stroke); border-radius: 999px; color: var(--accent); font-size: 11px; }
+      .divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent); margin: 14px 0; }
+      .small { color: var(--muted); font-size: 12px; }
+      .log { white-space: pre-wrap; background: rgba(0,0,0,0.3); border-radius: 10px; padding: 12px; min-height: 120px; border: 1px dashed rgba(255,255,255,0.08); }
+      .k { color: #7dd3fc; }
+      .v { color: #c084fc; }
+    </style>
+  </head>
+  <body>
+    <div style="display:flex; gap:10px; padding:14px 20px;">
+      <button class="btn" onclick="showTab('console')">Console</button>
+      <button class="btn" onclick="showTab('multi')">Multi‑Persona</button>
+    </div>
+    <div class="grid" id="tab-console">
+      <div class="panel">
+        <h1>Console — PersonaBot <span class="badge" id="health">checando...</span></h1>
+        <div class="divider"></div>
+
+        <h2>LLM & Ambiente</h2>
+        <div class="row">
+          <div>
+            <label>Provider</label>
+            <input id="LLM_PROVIDER" placeholder="openai ou ollama" />
+          </div>
+          <div>
+            <label>OPENAI_MODEL</label>
+            <input id="OPENAI_MODEL" placeholder="gpt-4o-mini" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>OLLAMA_BASE_URL</label>
+            <input id="OLLAMA_BASE_URL" placeholder="http://localhost:11434" />
+          </div>
+          <div>
+            <label>OLLAMA_MODEL</label>
+            <input id="OLLAMA_MODEL" placeholder="llama3.1" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>LLM_TEMPERATURE</label>
+            <input id="LLM_TEMPERATURE" placeholder="0.1" />
+          </div>
+          <div>
+            <label>LLM_TOP_P</label>
+            <input id="LLM_TOP_P" placeholder="0.9" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>LLM_MAX_TOKENS</label>
+            <input id="LLM_MAX_TOKENS" placeholder="256" />
+          </div>
+          <div>
+            <label>USE_RAG_TOOL</label>
+            <input id="USE_RAG_TOOL" placeholder="true/false" />
+          </div>
+        </div>
+        <div class="small">As mudanças são gravadas no .env local.</div>
+        <div style="margin-top:10px; display:flex; gap:8px;">
+          <button class="btn" onclick="saveEnv()">Salvar Ambiente</button>
+          <button class="btn" onclick="loadEnv()">Recarregar</button>
+        </div>
+
+        <div class="divider"></div>
+        <h2>Credenciais (YAML)</h2>
+        <textarea id="credentials" placeholder="Conteúdo YAML de credenciais"></textarea>
+        <div style="margin-top:10px; display:flex; gap:8px;">
+          <button class="btn" onclick="saveCreds()">Salvar Credenciais</button>
+          <button class="btn" onclick="loadCreds()">Recarregar</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h1>Persona & Interação</h1>
+        <div class="divider"></div>
+        <h2>Persona (persona.yaml)</h2>
+        <textarea id="persona" placeholder="YAML da persona"></textarea>
+        <div style="margin-top:10px; display:flex; gap:8px;">
+          <button class="btn" onclick="savePersona()">Salvar Persona</button>
+          <button class="btn" onclick="loadPersona()">Recarregar</button>
+        </div>
+        <div class="divider"></div>
+        <h2>Interação</h2>
+        <label>Pergunta</label>
+        <input id="question" placeholder="Escreva sua pergunta..." />
+        <div style="margin-top:10px; display:flex; gap:8px;">
+          <button class="btn" onclick="ask()">Perguntar</button>
+        </div>
+        <div class="divider"></div>
+        <h2>Resposta</h2>
+        <div id="answer" class="log">—</div>
+      </div>
+    </div>
+
+    <div class="grid" id="tab-multi" style="display:none; grid-template-columns: 1fr;">
+      <div class="panel">
+        <h1>Multi‑Persona — Analisador</h1>
+        <div class="divider"></div>
+        <label>Pergunta</label>
+        <input id="question-multi" placeholder="A mesma pergunta para todas as personas..." />
+        <div style="margin-top:10px; display:flex; gap:8px;">
+          <button class="btn" onclick="askMulti()">Analisar</button>
+          <button class="btn" onclick="toggleNewPersona()">Nova Persona</button>
+        </div>
+        <div id="new-persona" style="display:none; margin-top:12px;">
+          <div class="divider"></div>
+          <h2>Criar Nova Persona</h2>
+          <div class="row">
+            <div>
+              <label>Chave (arquivo)</label>
+              <input id="np_key" placeholder="ex.: visionaria" />
+            </div>
+            <div>
+              <label>Nome</label>
+              <input id="np_name" placeholder="Nome da persona" />
+            </div>
+          </div>
+          <label>Bio</label>
+          <input id="np_bio" placeholder="Breve bio" />
+          <div class="row">
+            <div>
+              <label>Tom de voz (1 por linha)</label>
+              <textarea id="np_tone" placeholder="ex.: preciso e direto\nex.: humor sutil"></textarea>
+            </div>
+            <div>
+              <label>Tópicos favoritos (1 por linha)</label>
+              <textarea id="np_fav" placeholder="ex.: IA\nex.: design"></textarea>
+            </div>
+          </div>
+          <label>Tópicos a evitar (1 por linha)</label>
+          <textarea id="np_avoid" placeholder="ex.: política\nex.: ataques pessoais"></textarea>
+          <div style="margin-top:10px; display:flex; gap:8px;">
+            <button class="btn" onclick="createPersona()">Salvar Nova Persona</button>
+            <button class="btn" onclick="toggleNewPersona()">Cancelar</button>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+        <div id="personas-cards" style="display:grid; grid-template-columns: 1fr 1fr; gap: 16px;">Carregando personas...</div>
+      </div>
+    </div>
+
+    <script>
+      async function api(path, opts={}){
+        const res = await fetch(path, {headers:{'Content-Type':'application/json'}, ...opts});
+        if(!res.ok){ throw new Error(await res.text()); }
+        return await res.json();
+      }
+      function setBadge(ok){
+        const el = document.getElementById('health');
+        el.textContent = ok? 'online' : 'offline';
+        el.style.color = ok? 'var(--accent)' : '#f87171';
+      }
+      async function checkHealth(){
+        try{ await api('/api/health'); setBadge(true);}catch{ setBadge(false);} }
+      async function loadEnv(){
+        const d = await api('/api/env');
+        const env = d.env||{};
+        for(const k of ['LLM_PROVIDER','OPENAI_MODEL','OLLAMA_BASE_URL','OLLAMA_MODEL','LLM_TEMPERATURE','LLM_TOP_P','LLM_MAX_TOKENS','USE_RAG_TOOL']){
+          const el = document.getElementById(k); if(el) el.value = env[k]||'';
+        }
+      }
+      async function saveEnv(){
+        const body = { env: {
+          LLM_PROVIDER: document.getElementById('LLM_PROVIDER').value.trim(),
+          OPENAI_MODEL: document.getElementById('OPENAI_MODEL').value.trim(),
+          OLLAMA_BASE_URL: document.getElementById('OLLAMA_BASE_URL').value.trim(),
+          OLLAMA_MODEL: document.getElementById('OLLAMA_MODEL').value.trim(),
+          LLM_TEMPERATURE: document.getElementById('LLM_TEMPERATURE').value.trim(),
+          LLM_TOP_P: document.getElementById('LLM_TOP_P').value.trim(),
+          LLM_MAX_TOKENS: document.getElementById('LLM_MAX_TOKENS').value.trim(),
+          USE_RAG_TOOL: document.getElementById('USE_RAG_TOOL').value.trim(),
+        }};
+        await api('/api/env',{method:'POST', body: JSON.stringify(body)});
+        alert('Ambiente salvo no .env. Reinicie o app se necessário.');
+      }
+      async function loadCreds(){
+        const d = await api('/api/credentials');
+        const txt = d.credentials? YAMLString(d.credentials) : '# sem arquivo credentials.yaml';
+        document.getElementById('credentials').value = txt;
+      }
+      async function saveCreds(){
+        const txt = document.getElementById('credentials').value;
+        let obj;
+        try{ obj = YAMLParse(txt);}catch(e){ alert('YAML inválido em credenciais'); return; }
+        await api('/api/credentials',{method:'POST', body: JSON.stringify({credentials: obj})});
+        alert('Credenciais salvas.');
+      }
+      async function loadPersona(){
+        const d = await api('/api/persona');
+        if(!d.ok){ document.getElementById('persona').value = '# persona.yaml não encontrado'; return; }
+        document.getElementById('persona').value = YAMLString(d.persona);
+      }
+      async function savePersona(){
+        const txt = document.getElementById('persona').value;
+        let obj;
+        try{ obj = YAMLParse(txt);}catch(e){ alert('YAML inválido na persona'); return; }
+        await api('/api/persona',{method:'POST', body: JSON.stringify({persona: obj})});
+        alert('Persona salva.');
+      }
+      async function ask(){
+        const q = document.getElementById('question').value.trim();
+        if(!q){ alert('Digite uma pergunta.'); return; }
+        document.getElementById('answer').textContent = 'pensando...';
+        try{
+          const r = await api('/api/ask',{method:'POST', body: JSON.stringify({question: q})});
+          document.getElementById('answer').textContent = r.answer || '(sem resposta)';
+        }catch(e){ document.getElementById('answer').textContent = 'erro: '+e.message; }
+      }
+      // YAML simples via JSON stringify/parse com manutenção de chaves.
+      // Para evitar dependências, implementamos um pseudo YAML: stringify bonito.
+      function YAMLString(obj){ return prettyYAML(obj); }
+      function YAMLParse(txt){
+        // tentativa simples: se começar com { ou [ trata como JSON, senão tenta um parser mínimo
+        txt = txt.trim();
+        if(!txt) return {};
+        if(txt.startsWith('{')||txt.startsWith('[')) return JSON.parse(txt);
+        // parser mínimo: chave: valor
+        const out = {};
+        for(const line of txt.split(/\r?\n/)){
+          const s = line.trim();
+          if(!s || s.startsWith('#')) continue;
+          const i = s.indexOf(':');
+          if(i<0) continue;
+          const k = s.slice(0,i).trim();
+          let v = s.slice(i+1).trim();
+          if((v.startsWith('"')&&v.endsWith('"')) || (v.startsWith("'")&&v.endsWith("'"))){ v = v.slice(1,-1); }
+          out[k]=v;
+        }
+        return out;
+      }
+      function prettyYAML(obj, indent=0){
+        if(obj==null) return 'null';
+        if(typeof obj!=='object') return JSON.stringify(obj);
+        if(Array.isArray(obj)){
+          if(obj.length===0) return '[]';
+          return obj.map(it=>'- '+prettyYAML(it, indent+2).replace(/^/gm,' '.repeat(indent))).join('\n');
+        }
+        const lines=[];
+        for(const k of Object.keys(obj)){
+          const v = obj[k];
+          if(v && typeof v==='object'){
+            lines.push(`${k}:\n`+prettyYAML(v, indent+2).replace(/^/gm,' '.repeat(indent+2)));
+          }else{
+            lines.push(`${k}: ${JSON.stringify(v)}`);
+          }
+        }
+        return lines.join('\n');
+      }
+
+      function linesToList(v){ return v.split(/\r?\n/).map(s=>s.trim()).filter(Boolean); }
+      function listToLines(a){ return (a||[]).join('\n'); }
+      function personaCardTemplate(p){
+        const key = p.key; const name = p.name || p.key;
+        return `
+        <div class="panel" id="card_${key}">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+            <div><span class="k">${key}</span> — <span class="v">${name}</span></div>
+            <label style="display:flex; gap:6px; align-items:center;"><input type="checkbox" id="use_${key}" checked /> usar</label>
+          </div>
+          <div class="divider"></div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn" onclick="showPersonaTab('${key}','resp')">Resposta</button>
+            <button class="btn" onclick="showPersonaTab('${key}','cfg')">Persona</button>
+          </div>
+          <div id="resp_${key}" class="log" style="margin-top:10px;">—</div>
+          <div id="cfg_${key}" style="display:none; margin-top:10px;">
+            <div class="row"><div>
+              <label>Nome</label><input id="name_${key}" />
+            </div><div>
+              <label>Bio</label><input id="bio_${key}" />
+            </div></div>
+            <div class="row"><div>
+              <label>Tom de voz</label><textarea id="tone_${key}"></textarea>
+            </div><div>
+              <label>Favoritos</label><textarea id="fav_${key}"></textarea>
+            </div></div>
+            <label>A evitar</label><textarea id="avoid_${key}"></textarea>
+            <div class="divider"></div>
+            <h2>Parâmetros de Estilo</h2>
+            <div class="row"><div>
+              <label>Concisão <span id="conc_lbl_${key}"></span></label>
+              <input type="range" id="conc_${key}" min="0" max="100" value="70" oninput="document.getElementById('conc_lbl_${key}').textContent=this.value" />
+            </div><div>
+              <label>Cautela <span id="caut_lbl_${key}"></span></label>
+              <input type="range" id="caut_${key}" min="0" max="100" value="80" oninput="document.getElementById('caut_lbl_${key}').textContent=this.value" />
+            </div></div>
+            <div class="row"><div>
+              <label>Criatividade <span id="crea_lbl_${key}"></span></label>
+              <input type="range" id="crea_${key}" min="0" max="100" value="30" oninput="document.getElementById('crea_lbl_${key}').textContent=this.value" />
+            </div><div>
+              <label>Empatia <span id="empa_lbl_${key}"></span></label>
+              <input type="range" id="empa_${key}" min="0" max="100" value="60" oninput="document.getElementById('empa_lbl_${key}').textContent=this.value" />
+            </div></div>
+            <div style="margin-top:10px;"><button class="btn" onclick="savePersonaCard('${key}')">Salvar Persona</button></div>
+            <div class="divider"></div>
+            <h2>Prévia YAML</h2>
+            <div id="prev_${key}" class="log">—</div>
+            <div style="margin-top:10px; display:flex; gap:8px;">
+              <button class="btn" onclick="updatePersonaPreview('${key}')">Atualizar Prévia</button>
+            </div>
+          </div>
+        </div>`
+      }
+      async function loadPresets(){
+        const d = await api('/api/personas/presets');
+        const list = d.presets || [];
+        const wrap = document.getElementById('personas-cards');
+        if(list.length===0){ wrap.textContent = 'Nenhuma persona encontrada.'; return; }
+        wrap.innerHTML = list.map(p=>personaCardTemplate(p)).join('');
+        for(const p of list){
+          try{
+            const data = await api(`/api/personas/${encodeURIComponent(p.key)}`);
+            if(data && data.ok){
+              const per = data.persona || {};
+              setVal(`name_${p.key}`, per.name || '');
+              setVal(`bio_${p.key}`, per.bio || '');
+              setVal(`tone_${p.key}`, listToLines(per.tone_of_voice));
+              setVal(`fav_${p.key}`, listToLines(per.favorite_topics));
+              setVal(`avoid_${p.key}`, listToLines(per.avoided_topics));
+              const sp = (per.style_params||{});
+              setSlider(`conc_${p.key}`, `conc_lbl_${p.key}`, sp.conciseness ?? 70);
+              setSlider(`caut_${p.key}`, `caut_lbl_${p.key}`, sp.caution ?? 80);
+              setSlider(`crea_${p.key}`, `crea_lbl_${p.key}`, sp.creativity ?? 30);
+              setSlider(`empa_${p.key}`, `empa_lbl_${p.key}`, sp.empathy ?? 60);
+              // Preencher prévia inicial
+              updatePersonaPreview(p.key);
+            }
+          }catch{}
+        }
+      }
+      function setVal(id, v){ const el=document.getElementById(id); if(el) el.value=v||''; }
+      function setSlider(id, lbl, v){ const el=document.getElementById(id); const lb=document.getElementById(lbl); if(el){ el.value = v; } if(lb){ lb.textContent = v; } }
+      function showPersonaTab(key, tab){
+        document.getElementById(`resp_${key}`).style.display = (tab==='resp')? 'block':'none';
+        document.getElementById(`cfg_${key}`).style.display = (tab==='cfg')? 'block':'none';
+      }
+      async function askMulti(){
+        const d = await api('/api/personas/presets');
+        const list = d.presets || [];
+        const keys = [];
+        for(const p of list){ const el = document.getElementById(`use_${p.key}`); if(el && el.checked) keys.push(p.key); }
+        const q = document.getElementById('question-multi').value.trim();
+        if(!q){ alert('Digite uma pergunta.'); return; }
+        for(const k of keys){ const ans = document.getElementById(`resp_${k}`); if(ans) ans.textContent='pensando...'; }
+        try{
+          const r = await api('/api/ask-multi',{method:'POST', body: JSON.stringify({question:q, persona_keys: keys})});
+          const ans = r.answers || {};
+          for(const k of Object.keys(ans)){
+            const el = document.getElementById(`resp_${k}`);
+            if(el) el.textContent = ans[k];
+          }
+        }catch(e){ alert('Erro ao analisar: '+e.message); }
+      }
+      async function savePersonaCard(key){
+        const persona = buildPersonaFromCard(key);
+        await api(`/api/personas/${encodeURIComponent(key)}`,{method:'POST', body: JSON.stringify({persona})});
+        alert(`Persona '${key}' salva.`);
+      }
+      function buildPersonaFromCard(key){
+        return {
+          name: document.getElementById(`name_${key}`).value.trim(),
+          bio: document.getElementById(`bio_${key}`).value.trim(),
+          tone_of_voice: linesToList(document.getElementById(`tone_${key}`).value),
+          favorite_topics: linesToList(document.getElementById(`fav_${key}`).value),
+          avoided_topics: linesToList(document.getElementById(`avoid_${key}`).value),
+          style_params: {
+            conciseness: parseInt(document.getElementById(`conc_${key}`).value, 10) || 0,
+            caution: parseInt(document.getElementById(`caut_${key}`).value, 10) || 0,
+            creativity: parseInt(document.getElementById(`crea_${key}`).value, 10) || 0,
+            empathy: parseInt(document.getElementById(`empa_${key}`).value, 10) || 0,
+          },
+        };
+      }
+      function updatePersonaPreview(key){
+        const persona = buildPersonaFromCard(key);
+        const prev = document.getElementById(`prev_${key}`);
+        if(prev) prev.textContent = YAMLString(persona);
+      }
+      function toggleNewPersona(){
+        const el = document.getElementById('new-persona');
+        el.style.display = (el.style.display==='none'||!el.style.display)? 'block' : 'none';
+      }
+      async function createPersona(){
+        const key = document.getElementById('np_key').value.trim();
+        if(!key){ alert('Informe a chave da persona.'); return; }
+        const persona = {
+          name: document.getElementById('np_name').value.trim() || key,
+          bio: document.getElementById('np_bio').value.trim() || '',
+          tone_of_voice: linesToList(document.getElementById('np_tone').value),
+          favorite_topics: linesToList(document.getElementById('np_fav').value),
+          avoided_topics: linesToList(document.getElementById('np_avoid').value),
+          style_params: {
+            conciseness: 70,
+            caution: 80,
+            creativity: 30,
+            empathy: 60,
+          },
+        };
+        try{
+          await api('/api/personas',{method:'POST', body: JSON.stringify({key, persona})});
+          alert('Nova persona criada.');
+          toggleNewPersona();
+          await loadPresets();
+        }catch(e){ alert('Erro ao criar persona: '+e.message); }
+      }
+      function showTab(id){
+        document.getElementById('tab-console').style.display = (id==='console')? 'grid' : 'none';
+        document.getElementById('tab-multi').style.display = (id==='multi')? 'grid' : 'none';
+      }
+      (async ()=>{ await checkHealth(); await loadEnv(); await loadCreds(); await loadPersona(); await loadPresets(); })();
+    </script>
+  </body>
+  </html>
